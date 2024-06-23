@@ -49,7 +49,6 @@ public class FilmController {
                 newFilm.getReleaseDate() == null) {
                 return oldFilm;
             }
-            // если фильм найден и все условия соблюдены, обновляем его содержимое
             Film updateFilm = Film.builder()
                     .id(oldFilm.getId())
                     .name(newFilm.getName())
