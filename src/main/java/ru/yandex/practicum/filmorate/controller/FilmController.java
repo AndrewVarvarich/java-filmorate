@@ -81,6 +81,7 @@ public class FilmController {
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
         }
     }
+
     private long getNextFilmId() {
         return films.keySet().stream().mapToLong(id -> id).max().orElse(0) + 1;
     }
