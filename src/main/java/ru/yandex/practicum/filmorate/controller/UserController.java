@@ -1,12 +1,15 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,9 +17,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/users")
 @Slf4j
+@Validated
 public class UserController {
 
-    Map<Long, User> users = new HashMap<>();
+    private Map<Long, User> users = new HashMap<>();
 
     @GetMapping
     public Collection<User> getAllUsers() {
@@ -24,13 +28,8 @@ public class UserController {
     }
 
     @PostMapping
-    public User addUser(@RequestBody User user) {
-        // проверяем выполнение необходимых условий
-        validateUser(user);
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-        // формируем дополнительные данные
+    public User addUser(@Valid @RequestBody User user) {
+        user.setNameIfEmpty();
         user.setId(getNextUserId());
         users.put(user.getId(), user);
         log.info("Объект успешно добавлен\n", user);
@@ -38,18 +37,14 @@ public class UserController {
     }
 
     @PutMapping
-    public User updateUser(@RequestBody User newUser) {
+    public User updateUser(@Valid @RequestBody User newUser) {
         if (newUser.getId() == null) {
             log.error("Ошибка в id\n");
             throw new ValidationException("Id должен быть указан");
         }
         if (users.containsKey(newUser.getId())) {
-            validateUser(newUser);
             User oldUser = users.get(newUser.getId());
-            if (newUser.getName() == null || newUser.getName().isBlank()) {
-                newUser.setName(newUser.getLogin());
-            }
-            // если пользователь найден и все условия соблюдены, обновляем его содержимое
+            newUser.setNameIfEmpty();
             User updateUser = User.builder()
                     .id(oldUser.getId())
                     .email(newUser.getEmail())
@@ -61,22 +56,28 @@ public class UserController {
             log.info("Объект успешно обновлен\n", updateUser);
             return updateUser;
         }
+        log.info("Объект не добавлен\n");
         throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
     }
 
-    private void validateUser(User user) {
-        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            log.error("Неверная почта");
-            throw new ValidationException("Почта не может быть пустой и должна содержать символ '@'");
-        }
-        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            log.error("Неверный логин");
-            throw new ValidationException("Логин не может быть пустой и содержать пробелы");
-        }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("Неверная дата рождения");
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        }
+    @ExceptionHandler(ValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<Map<String, String>> handleValidationException(ValidationException ex) {
+        String errorMessage = ex.getMessage();
+        log.error("Ошибка: {}", errorMessage);
+        Map<String, String> errorDetails = new HashMap<>();
+        errorDetails.put("error", errorMessage);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorDetails);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<Map<String, String>> handleNotFoundException(NotFoundException ex) {
+        String errorMessage = ex.getMessage();
+        log.error("Ошибка: {}", errorMessage);
+        Map<String, String> errorDetails = new HashMap<>();
+        errorDetails.put("error", errorMessage);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDetails);
     }
 
     private long getNextUserId() {
