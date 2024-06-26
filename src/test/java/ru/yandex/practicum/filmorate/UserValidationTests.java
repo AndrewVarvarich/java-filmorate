@@ -28,7 +28,7 @@ class UserValidationTests {
         User user = createUserWithCustomEmail("");
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
-        assertEquals("не должно быть пустым", violations.iterator().next().getMessage());
+        assertEquals("must not be blank", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -36,7 +36,7 @@ class UserValidationTests {
         User user = createUserWithCustomEmail("invalidemail.com");
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
-        assertEquals("должно иметь формат адреса электронной почты", violations.iterator().next().getMessage());
+        assertEquals("must be a well-formed email address", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -44,7 +44,7 @@ class UserValidationTests {
         User user = createUserWithCustomLogin("");
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
-        assertEquals("не должно быть пустым", violations.iterator().next().getMessage());
+        assertEquals("must not be blank", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -59,7 +59,7 @@ class UserValidationTests {
         User user = createUserWithCustomBirthday(LocalDate.of(3000, 1, 1));
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
-        assertEquals("должно содержать прошедшую дату", violations.iterator().next().getMessage());
+        assertEquals("must be a past date", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -72,7 +72,7 @@ class UserValidationTests {
                 .build();
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
-        assertEquals("не должно быть пустым", violations.iterator().next().getMessage());
+        assertEquals("must not be null", violations.iterator().next().getMessage());
 
     }
 

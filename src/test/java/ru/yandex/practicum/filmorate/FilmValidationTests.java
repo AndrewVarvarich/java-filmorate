@@ -49,7 +49,7 @@ class FilmValidationTests {
                 .build();
 
         ValidationException exception = assertThrows(ValidationException.class, () -> assertValidationException("Название не может быть пустым", film));
-        assertEquals("не должно быть пустым", exception.getMessage());
+        assertEquals("must not be blank", exception.getMessage());
     }
 
     @Test
@@ -62,7 +62,7 @@ class FilmValidationTests {
                 .build();
 
         ValidationException exception = assertThrows(ValidationException.class, () -> assertValidationException("Максимальная длина описания — 200 символов", film));
-        assertEquals("размер должен находиться в диапазоне от 0 до 200", exception.getMessage());
+        assertEquals("size must be between 0 and 200", exception.getMessage());
     }
 
     @Test
@@ -75,7 +75,7 @@ class FilmValidationTests {
                 .build();
 
         ValidationException exception = assertThrows(ValidationException.class, () -> assertValidationException("Продолжительность фильма должна быть положительным числом", film));
-        assertEquals("должно быть больше 0", exception.getMessage());
+        assertEquals("must be greater than 0", exception.getMessage());
     }
 
     @Test
@@ -89,7 +89,7 @@ class FilmValidationTests {
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
-        assertEquals("должно быть больше 0", violations.iterator().next().getMessage());
+        assertEquals("must be greater than 0", violations.iterator().next().getMessage());
     }
 
     private void assertValidationException(String expectedMessage, Film film) {
