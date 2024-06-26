@@ -25,6 +25,7 @@ class FilmValidationTests {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
+
     @Test
     public void whenAddFilmWithValidData_thenSuccess() {
         Film film = Film.builder()
