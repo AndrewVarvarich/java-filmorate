@@ -4,6 +4,10 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import jakarta.validation.ConstraintViolation;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.model.User;
@@ -28,7 +32,8 @@ class UserValidationTests {
         User user = createUserWithCustomEmail("");
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
-        assertEquals("must not be blank", violations.iterator().next().getMessage());
+        ConstraintViolation<User> violation = violations.iterator().next();
+        assertTrue(violation.getConstraintDescriptor().getAnnotation().annotationType().equals(NotBlank.class));
     }
 
     @Test
@@ -36,7 +41,8 @@ class UserValidationTests {
         User user = createUserWithCustomEmail("invalidemail.com");
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
-        assertEquals("must be a well-formed email address", violations.iterator().next().getMessage());
+        ConstraintViolation<User> violation = violations.iterator().next();
+        assertTrue(violation.getConstraintDescriptor().getAnnotation().annotationType().equals(Email.class));
     }
 
     @Test
@@ -44,7 +50,8 @@ class UserValidationTests {
         User user = createUserWithCustomLogin("");
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
-        assertEquals("must not be blank", violations.iterator().next().getMessage());
+        ConstraintViolation<User> violation = violations.iterator().next();
+        assertTrue(violation.getConstraintDescriptor().getAnnotation().annotationType().equals(NotBlank.class));
     }
 
     @Test
@@ -59,21 +66,49 @@ class UserValidationTests {
         User user = createUserWithCustomBirthday(LocalDate.of(3000, 1, 1));
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
-        assertEquals("must be a past date", violations.iterator().next().getMessage());
+        ConstraintViolation<User> violation = violations.iterator().next();
+        assertTrue(violation.getConstraintDescriptor().getAnnotation().annotationType().equals(Past.class));
     }
 
     @Test
-    public void whenAddUserWithNullValues_thenValidationException() {
+    public void whenAddUserWithNullValues_thenValidationExceptions() {
         User user = User.builder()
                 .email(null)
                 .login(null)
                 .name(null)
                 .birthday(null)
                 .build();
-        Set<ConstraintViolation<User>> violations = validator.validate(user);
-        assertFalse(violations.isEmpty());
-        assertEquals("must not be null", violations.iterator().next().getMessage());
 
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+
+        assertFalse(violations.isEmpty(), "Expected violations were not found");
+
+        boolean foundEmailViolation = false;
+        boolean foundLoginViolation = false;
+        boolean foundBirthdayViolation = false;
+
+        for (ConstraintViolation<User> violation : violations) {
+            switch (violation.getPropertyPath().toString()) {
+                case "email":
+                    assertTrue(violation.getConstraintDescriptor().getAnnotation().annotationType().equals(NotBlank.class));
+                    foundEmailViolation = true;
+                    break;
+                case "login":
+                    assertTrue(violation.getConstraintDescriptor().getAnnotation().annotationType().equals(NotBlank.class));
+                    foundLoginViolation = true;
+                    break;
+                case "birthday":
+                    assertTrue(violation.getConstraintDescriptor().getAnnotation().annotationType().equals(NotNull.class));
+                    foundBirthdayViolation = true;
+                    break;
+                default:
+                    fail("Unexpected property violation: " + violation.getPropertyPath().toString());
+            }
+        }
+
+        assertTrue(foundEmailViolation, "Missing violation for email");
+        assertTrue(foundLoginViolation, "Missing violation for login");
+        assertTrue(foundBirthdayViolation, "Missing violation for birthday");
     }
 
     private User createUserWithCustomEmail(String email) {

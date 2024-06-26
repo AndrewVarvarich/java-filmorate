@@ -4,11 +4,13 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import jakarta.validation.constraints.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -48,8 +50,10 @@ class FilmValidationTests {
                 .duration(120)
                 .build();
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> assertValidationException("Название не может быть пустым", film));
-        assertEquals("must not be blank", exception.getMessage());
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertFalse(violations.isEmpty());
+        ConstraintViolation<Film> violation = violations.iterator().next();
+        assertTrue(violation.getConstraintDescriptor().getAnnotation().annotationType().equals(NotBlank.class));
     }
 
     @Test
@@ -61,8 +65,10 @@ class FilmValidationTests {
                 .duration(120)
                 .build();
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> assertValidationException("Максимальная длина описания — 200 символов", film));
-        assertEquals("size must be between 0 and 200", exception.getMessage());
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertFalse(violations.isEmpty());
+        ConstraintViolation<Film> violation = violations.iterator().next();
+        assertTrue(violation.getConstraintDescriptor().getAnnotation().annotationType().equals(Size.class));
     }
 
     @Test
@@ -74,29 +80,44 @@ class FilmValidationTests {
                 .duration(-120)
                 .build();
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> assertValidationException("Продолжительность фильма должна быть положительным числом", film));
-        assertEquals("must be greater than 0", exception.getMessage());
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertFalse(violations.isEmpty());
+        ConstraintViolation<Film> violation = violations.iterator().next();
+        assertTrue(violation.getConstraintDescriptor().getAnnotation().annotationType().equals(Positive.class));
     }
 
     @Test
     public void whenAddFilmWithNullValues_thenValidationException() {
         Film film = Film.builder()
                 .name(null)
-                .description(null)
                 .releaseDate(null)
                 .duration(0)
                 .build();
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
-        assertFalse(violations.isEmpty());
-        assertEquals("must be greater than 0", violations.iterator().next().getMessage());
+
+        assertFalse(violations.isEmpty(), "Expected violations were not found");
+
+        boolean foundNameViolation = false;
+        boolean foundDurationDateViolation = false;
+
+        for (ConstraintViolation<Film> violation : violations) {
+            switch (violation.getPropertyPath().toString()) {
+                case "name":
+                    assertTrue(violation.getConstraintDescriptor().getAnnotation().annotationType().equals(NotBlank.class));
+                    foundNameViolation = true;
+                    break;
+                case "duration":
+                    assertTrue(violation.getConstraintDescriptor().getAnnotation().annotationType().equals(Positive.class));
+                    foundDurationDateViolation = true;
+                    break;
+                default:
+                    fail("Unexpected property violation: " + violation.getPropertyPath().toString());
+            }
+        }
+
+        assertTrue(foundNameViolation, "Missing violation for name");
+        assertTrue(foundDurationDateViolation, "Missing violation for duration");
     }
 
-    private void assertValidationException(String expectedMessage, Film film) {
-        Set<jakarta.validation.ConstraintViolation<Film>> violations = validator.validate(film);
-        if (!violations.isEmpty()) {
-            String actualMessage = violations.iterator().next().getMessage();
-            throw new ValidationException(actualMessage);
-        }
-    }
 }
