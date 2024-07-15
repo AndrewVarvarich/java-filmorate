@@ -97,13 +97,11 @@ public class FilmService {
             return Integer.compare(size2, size1);
         });
 
-        // Вывод отладочной информации
         allFilms.forEach(film -> {
             int likesCount = film.getLikes() == null ? 0 : film.getLikes().size();
             System.out.println("Film ID: " + film.getId() + ", Likes: " + likesCount);
         });
 
-        // Ограничение количества фильмов до значения count
         return allFilms.stream()
                 .limit(count)
                 .collect(Collectors.toList());
