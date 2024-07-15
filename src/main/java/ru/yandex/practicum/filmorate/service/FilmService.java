@@ -61,7 +61,7 @@ public class FilmService {
             return;
         }
 
-        if (userStorage.findUserById(userId) == null) {
+        if (userStorage.findUserById(userId) == null || userStorage.findUserById(userId).isEmpty()) {
             throw new NotFoundException("Пользователь не найден");
         }
 
