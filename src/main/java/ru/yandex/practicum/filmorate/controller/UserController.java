@@ -7,10 +7,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
+import java.util.Map;
 
 
 @RestController
@@ -52,17 +55,22 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public ResponseEntity<String> addFriend(@PathVariable("id") Long id,
-                                            @PathVariable("friendId") Long friendId) {
+    public ResponseEntity<Object> addFriend(@PathVariable("id") Long id, @PathVariable("friendId") Long friendId) {
         userService.addFriend(id, friendId);
-        return ResponseEntity.ok("Друг успешно добавлен");
+        return ResponseEntity.ok(Map.of("answer", "Друг успешно добавлен"));
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    @ResponseStatus(HttpStatus.OK)
-    public void removeFriends(@PathVariable("id") Long id,
-                              @PathVariable("friendId") Long friendId) {
-        userService.removeFriend(id, friendId);
+    public ResponseEntity<Object> removeFriends(@PathVariable("id") Long id,
+                                                @PathVariable("friendId") Long friendId) {
+        try {
+            userService.removeFriend(id, friendId);
+            return ResponseEntity.ok(Map.of("message", "Друг успешно удален"));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/{id}/friends")

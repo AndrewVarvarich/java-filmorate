@@ -55,25 +55,27 @@ public class UserService {
         user.getFriendsId().add(friendId);
         friend.getFriendsId().add(userId);
 
+        userStorage.updateUser(user);
+        userStorage.updateUser(friend);
+
         log.info("Пользователь с id {} и пользователь с id {} теперь друзья", userId, friendId);
     }
 
     public void removeFriend(long userId, long friendId) {
         User user = userStorage.findUserById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-        if (user.getFriendsId() == null) {
-            throw new NotFoundException("У пользователя " + userId + " нет друзей");
-        }
 
         User friend = userStorage.findUserById(friendId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
-        if (friend.getFriendsId() == null) {
-            throw new NotFoundException("У пользователя с id " + friendId + " нет друзей");
-        }
 
-        user.getFriendsId().remove(friendId);
-        friend.getFriendsId().remove(userId);
-        log.info("Пользователь с id {} и пользователь с id {} больше не друзья", userId, friendId);
+        Set<Long> userFriends = user.getFriendsId();
+        Set<Long> friendFriends = friend.getFriendsId();
+
+        userFriends.remove(friendId);
+        friendFriends.remove(userId);
+
+        userStorage.updateUser(user);
+        userStorage.updateUser(friend);
     }
 
 
@@ -95,7 +97,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public List<User> getFriends(long userId) {
+    public Collection<User> getFriends(long userId) {
         User user = userStorage.findUserById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
@@ -109,4 +111,5 @@ public class UserService {
                         .orElseThrow(() -> new NotFoundException("Друг с id " + friendId + " не найден")))
                 .collect(Collectors.toList());
     }
+
 }
