@@ -28,6 +28,7 @@ public class ErrorHandler {
     public ErrorResponse handleResourceDoesNotExistException(final ResourceDoesNotExistException e) {
         return new ErrorResponse(e.getMessage());
     }
+
     class ErrorResponse {
         private final String error;
 
