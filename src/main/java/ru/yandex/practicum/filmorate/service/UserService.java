@@ -78,7 +78,6 @@ public class UserService {
         userStorage.updateUser(friend);
     }
 
-
     public List<User> getCommonFriends(long userId, long friendId) {
         User user = userStorage.findUserById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
@@ -111,5 +110,4 @@ public class UserService {
                         .orElseThrow(() -> new NotFoundException("Друг с id " + friendId + " не найден")))
                 .collect(Collectors.toList());
     }
-
 }
