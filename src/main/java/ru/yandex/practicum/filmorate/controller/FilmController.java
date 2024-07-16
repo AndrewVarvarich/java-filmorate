@@ -1,8 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -17,16 +17,11 @@ import java.util.Collection;
 @RequestMapping("/films")
 @Slf4j
 @Validated
+@RequiredArgsConstructor
 public class FilmController {
 
     private final FilmValidationService filmValidationService;
     private final FilmService filmService;
-
-    @Autowired
-    public FilmController(FilmValidationService filmValidationService, FilmService fs) {
-        this.filmValidationService = filmValidationService;
-        filmService = fs;
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Film> getFilmById(@PathVariable long id) {
@@ -61,8 +56,8 @@ public class FilmController {
 
     @DeleteMapping("/{id}/like/{userId}")
     @ResponseStatus(HttpStatus.OK)
-    public void deleteLike(@PathVariable("id") Long id,
-                           @PathVariable("userId") Long userId) {
+    public void deleteLike(@PathVariable("id") long id,
+                           @PathVariable("userId") long userId) {
         filmService.removeLike(id, userId);
     }
 

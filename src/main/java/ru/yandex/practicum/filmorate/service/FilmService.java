@@ -43,14 +43,12 @@ public class FilmService {
     }
 
     public void removeFilm(long id) {
-        Film film = filmStorage.findFilmById(id)
-                .orElseThrow(() -> new NotFoundException("Фильма с id " + id + " не найдено"));
+        Film film = findFilmOrThrow(id);
         filmStorage.removeFilm(film);
     }
 
     public void addLike(long filmId, long userId) {
-        Film film = filmStorage.findFilmById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильма с id " + filmId + " не найдено"));
+        Film film = findFilmOrThrow(filmId);
 
         if (film.getLikes() == null) {
             film.setLikes(new HashSet<>());
@@ -71,8 +69,7 @@ public class FilmService {
     }
 
     public void removeLike(long filmId, long userId) {
-        Film film = filmStorage.findFilmById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильма с id " + filmId + " не найдено"));
+        Film film = findFilmOrThrow(filmId);
 
         if (film.getLikes() == null || film.getLikes().isEmpty()) {
             throw new NotFoundException("У фильма нет лайков");
@@ -90,7 +87,6 @@ public class FilmService {
     public Collection<Film> getPopularFilm(int count) {
         List<Film> allFilms = new ArrayList<>(filmStorage.getAllFilms());
 
-        // Сортировка фильмов по убыванию количества лайков
         allFilms.sort((film1, film2) -> {
             int size1 = film1.getLikes() == null ? 0 : film1.getLikes().size();
             int size2 = film2.getLikes() == null ? 0 : film2.getLikes().size();
@@ -99,11 +95,16 @@ public class FilmService {
 
         allFilms.forEach(film -> {
             int likesCount = film.getLikes() == null ? 0 : film.getLikes().size();
-            System.out.println("Film ID: " + film.getId() + ", Likes: " + likesCount);
+            log.info("Film ID: {}, Likes: {}", film.getId(), likesCount);
         });
 
         return allFilms.stream()
                 .limit(count)
                 .collect(Collectors.toList());
+    }
+
+    private Film findFilmOrThrow(long filmId) {
+        return filmStorage.findFilmById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
     }
 }

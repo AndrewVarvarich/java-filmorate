@@ -9,14 +9,20 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ResourceDoesNotExistException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 
+import java.util.Map;
+
 @RestControllerAdvice
 @Slf4j
 public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNotFound(final NotFoundException e) {
-        return new ErrorResponse(e.getMessage());
+    public Map<String, String> handleNotFoundException(final NotFoundException e) {
+        log.error("Ошибка с входными параметрами: {}.", e.getMessage());
+        return Map.of(
+                "error", "Ошибка с входными параметрами.",
+                "description", e.getMessage()
+        );
     }
 
     @ExceptionHandler

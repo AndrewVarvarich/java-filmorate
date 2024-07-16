@@ -62,14 +62,8 @@ public class UserController {
     @DeleteMapping("/{id}/friends/{friendId}")
     public ResponseEntity<Object> removeFriends(@PathVariable("id") Long id,
                                                 @PathVariable("friendId") Long friendId) {
-        try {
             userService.removeFriend(id, friendId);
             return ResponseEntity.ok(Map.of("message", "Друг успешно удален"));
-        } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("error", e.getMessage()));
-        }
     }
 
     @GetMapping("/{id}/friends")
