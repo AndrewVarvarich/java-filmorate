@@ -1,98 +1,69 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.FilmValidationService;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/films")
 @Slf4j
 @Validated
+@RequiredArgsConstructor
 public class FilmController {
 
-    private Map<Long, Film> films = new HashMap<>();
-
     private final FilmValidationService filmValidationService;
+    private final FilmService filmService;
 
-    @Autowired
-    public FilmController(FilmValidationService filmValidationService) {
-        this.filmValidationService = filmValidationService;
+    @GetMapping("/{id}")
+    public ResponseEntity<Film> getFilmById(@PathVariable long id) {
+        return filmService.findFilmById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
     public Collection<Film> getAllFilms() {
-        return films.values();
+        return filmService.getAllFilms();
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Film addFilm(@Valid @RequestBody Film film) {
-        filmValidationService.validateFilm(film);
-        film.setId(getNextFilmId());
-        films.put(film.getId(), film);
-        log.info("Объект успешно добавлен: {}\n", film);
-        return film;
+        return filmService.addFilm(film);
     }
 
     @PutMapping
+    @ResponseStatus(HttpStatus.OK)
     public Film updateFilm(@Valid @RequestBody Film newFilm) {
-        filmValidationService.validateFilm(newFilm);
-        if (newFilm.getId() == null) {
-            log.error("Ошибка в id\n");
-            throw new ValidationException("Id должен быть указан");
-        }
-        if (films.containsKey(newFilm.getId())) {
-            Film oldFilm = films.get(newFilm.getId());
-            if (newFilm.getName() == null || newFilm.getDescription() == null || newFilm.getDuration() == 0 ||
-                    newFilm.getReleaseDate() == null) {
-                return oldFilm;
-            }
-            Film updateFilm = Film.builder()
-                    .id(oldFilm.getId())
-                    .name(newFilm.getName())
-                    .description(newFilm.getDescription())
-                    .releaseDate(newFilm.getReleaseDate())
-                    .duration(newFilm.getDuration())
-                    .build();
-            films.put(updateFilm.getId(), updateFilm);
-            log.info("Объект успешно обновлен\n");
-            return updateFilm;
-        }
-        throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
+        return filmService.updateFilm(newFilm);
     }
 
-    @ExceptionHandler(ValidationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<Map<String, String>> handleValidationException(ValidationException ex) {
-        String errorMessage = ex.getMessage();
-        log.error("Ошибка: {}", errorMessage);
-        Map<String, String> errorDetails = new HashMap<>();
-        errorDetails.put("error", errorMessage);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorDetails);
+    @PutMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void getLiked(@PathVariable("id") Long id,
+                         @PathVariable("userId") Long userId) {
+        filmService.addLike(id, userId);
     }
 
-    @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ResponseEntity<Map<String, String>> handleNotFoundException(NotFoundException ex) {
-        String errorMessage = ex.getMessage();
-        log.error("Ошибка: {}", errorMessage);
-        Map<String, String> errorDetails = new HashMap<>();
-        errorDetails.put("error", errorMessage);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDetails);
+    @DeleteMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteLike(@PathVariable("id") long id,
+                           @PathVariable("userId") long userId) {
+        filmService.removeLike(id, userId);
     }
 
-    private long getNextFilmId() {
-        return films.keySet().stream().mapToLong(id -> id).max().orElse(0) + 1;
+    @GetMapping("/popular")
+    @ResponseStatus(HttpStatus.OK)
+    public Collection<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
+        return filmService.getPopularFilm(count);
     }
 }

@@ -8,6 +8,8 @@ import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Film.
@@ -15,7 +17,9 @@ import java.time.LocalDate;
 @Data
 @Builder
 public class Film {
-    Long id;
+    private Long id;
+
+    private Set<Long> likes = new HashSet<>();
 
     @NotBlank
     private String name;
@@ -28,4 +32,5 @@ public class Film {
 
     @Positive
     private int duration;
+
 }
