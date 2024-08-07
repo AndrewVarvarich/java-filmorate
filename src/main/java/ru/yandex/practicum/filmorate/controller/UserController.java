@@ -13,7 +13,6 @@ import ru.yandex.practicum.filmorate.service.UserService;
 import java.util.Collection;
 import java.util.Map;
 
-
 @RestController
 @RequestMapping("/users")
 @Slf4j
@@ -28,53 +27,54 @@ public class UserController {
     }
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public Collection<User> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<Collection<User>> getAllUsers() {
+        Collection<User> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable("id") Long id) {
-        return userService.findUserById(id)
+        return userService.getUserById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public User addUser(@Valid @RequestBody User user) {
-        return userService.addUser(user);
+    public ResponseEntity<User> addUser(@Valid @RequestBody User user) {
+        User createdUser = userService.saveUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
-    @PutMapping
-    @ResponseStatus(HttpStatus.OK)
-    public User updateUser(@Valid @RequestBody User newUser) {
-        return userService.updateUser(newUser);
+    @PutMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable("id") Long id, @Valid @RequestBody User user) {
+        User updatedUser = userService.updateUser(id, user);
+        return ResponseEntity.ok(updatedUser);
     }
 
-    @PutMapping("/{id}/friends/{friendId}")
-    public ResponseEntity<Object> addFriend(@PathVariable("id") Long id, @PathVariable("friendId") Long friendId) {
-        userService.addFriend(id, friendId);
-        return ResponseEntity.ok(Map.of("answer", "Друг успешно добавлен"));
-    }
-
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public ResponseEntity<Object> removeFriends(@PathVariable("id") Long id,
-                                                @PathVariable("friendId") Long friendId) {
-            userService.removeFriend(id, friendId);
-            return ResponseEntity.ok(Map.of("message", "Друг успешно удален"));
-    }
-
-    @GetMapping("/{id}/friends")
-    @ResponseStatus(HttpStatus.OK)
-    public Collection<User> getFriends(@PathVariable("id") Long id) {
-        return userService.getFriends(id);
-    }
-
-    @GetMapping("/{id}/friends/common/{otherId}")
-    @ResponseStatus(HttpStatus.OK)
-    public Collection<User> getCommonFriends(@PathVariable("id") Long id,
-                                             @PathVariable("otherId") Long otherId) {
-        return userService.getCommonFriends(id, otherId);
-    }
+//    @PutMapping("/{id}/friends/{friendId}")
+//    public ResponseEntity<Map<String, String>> addFriend(@PathVariable("id") Long id,
+//                                                         @PathVariable("friendId") Long friendId) {
+//        userService.addFriend(id, friendId);
+//        return ResponseEntity.ok(Map.of("message", "Friend successfully added"));
+//    }
+//
+//    @DeleteMapping("/{id}/friends/{friendId}")
+//    public ResponseEntity<Map<String, String>> removeFriend(@PathVariable("id") Long id,
+//                                                            @PathVariable("friendId") Long friendId) {
+//        userService.removeFriend(id, friendId);
+//        return ResponseEntity.ok(Map.of("message", "Friend successfully removed"));
+//    }
+//
+//    @GetMapping("/{id}/friends")
+//    public ResponseEntity<Collection<User>> getFriends(@PathVariable("id") Long id) {
+//        Collection<User> friends = userService.getFriends(id);
+//        return ResponseEntity.ok(friends);
+//    }
+//
+//    @GetMapping("/{id}/friends/common/{otherId}")
+//    public ResponseEntity<Collection<User>> getCommonFriends(@PathVariable("id") Long id,
+//                                                             @PathVariable("otherId") Long otherId) {
+//        Collection<User> commonFriends = userService.getCommonFriends(id, otherId);
+//        return ResponseEntity.ok(commonFriends);
+//    }
 }

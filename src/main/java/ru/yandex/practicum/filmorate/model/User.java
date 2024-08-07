@@ -15,8 +15,6 @@ import java.util.Set;
 public class User {
     private Long id;
 
-    private Set<Long> friendsId;
-
     @NotBlank
     @Email
     private String email;
