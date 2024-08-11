@@ -8,8 +8,6 @@ import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Film.
@@ -17,6 +15,7 @@ import java.util.Set;
 @Data
 @Builder
 public class Film {
+
     private Long id;
 
     @NotBlank
@@ -31,5 +30,5 @@ public class Film {
     @Positive
     private int duration;
 
-    private int rating;
+    private Mpa mpa;
 }

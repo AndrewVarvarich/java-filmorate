@@ -1,31 +1,29 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.dao_storage.film.FilmDbStorage;
-import ru.yandex.practicum.filmorate.dao_storage.user.UserDbStorage;
+import ru.yandex.practicum.filmorate.dao.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.dao.user.UserDbStorage;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class FilmService {
 
     private final FilmDbStorage filmDbStorage;
     private final UserDbStorage userDbStorage;
-
-    @Autowired
-    public FilmService(FilmDbStorage filmDbStorage, UserDbStorage userDbStorage) {
-        this.filmDbStorage = filmDbStorage;
-        this.userDbStorage = userDbStorage;
-    }
+    private final MpaValidationService mpaValidation;
+    private final FilmValidationService filmValidation;
 
     public Optional<Film> findFilmById(long id) {
-        return filmDbStorage.getFilmById(id);
+         return filmDbStorage.getFilmById(id);
     }
 
     public Collection<Film> getAllFilms() {
@@ -33,11 +31,15 @@ public class FilmService {
     }
 
     public Film addFilm(Film film) {
+        filmValidation.validateFilm(film);
+        mpaValidation.validateMpaId(film.getMpa().getId());
         filmDbStorage.saveFilm(film);
         return film;
     }
 
     public Film updateFilm(Film film) {
+        filmValidation.validateFilm(film);
+        mpaValidation.validateMpaId(film.getMpa().getId());
         filmDbStorage.updateFilm(film);
         return film;
     }

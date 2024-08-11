@@ -1,10 +1,9 @@
-package ru.yandex.practicum.filmorate.dao_storage.user;
+package ru.yandex.practicum.filmorate.dao.user;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -19,8 +18,8 @@ public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbc;
 
-    public UserDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbc = jdbcTemplate;
+    public UserDbStorage(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
     }
 
     @Override
@@ -59,6 +58,37 @@ public class UserDbStorage implements UserStorage {
         return jdbc.query(query, new UserRowMapper());
     }
 
+    @Override
+    public void addFriend(long userId, long friendId) {
+        String query = "INSERT INTO friendship (user_id, friend_id) VALUES (?, ?)";
+        jdbc.update(query, userId, friendId);
+    }
+
+    @Override
+    public void removeFriend(long userId, long friendId) {
+        String query = "DELETE FROM friendship WHERE user_id = ? AND friend_id = ?";
+        jdbc.update(query, userId, friendId);
+    }
+
+    @Override
+    public List<User> getFriends(long userId) {
+        String query = "SELECT u.id, u.email, u.login, u.name, u.birthday " +
+                "FROM users u " +
+                "JOIN friendship f ON u.id = f.friend_id " +
+                "WHERE f.user_id = ?";
+        return jdbc.query(query, new UserRowMapper(), userId);
+    }
+
+    @Override
+    public List<User> getCommonFriends(long userId, long friendId) {
+        String query = "SELECT u.id, u.email, u.login, u.name, u.birthday " +
+                "FROM users u " +
+                "JOIN friendship f1 ON u.id = f1.friend_id " +
+                "JOIN friendship f2 ON u.id = f2.friend_id " +
+                "WHERE f1.user_id = ? AND f2.user_id = ?";
+        return jdbc.query(query, new UserRowMapper(), userId, friendId);
+    }
+
     public static class UserRowMapper implements RowMapper<User> {
         @Override
         public User mapRow(ResultSet resultSet, int rowNum) throws SQLException {
@@ -67,7 +97,8 @@ public class UserDbStorage implements UserStorage {
                     .email(resultSet.getString("email"))
                     .login(resultSet.getString("login"))
                     .name(resultSet.getString("name"))
-                    .birthday(resultSet.getDate("birthday") != null ? resultSet.getDate("birthday").toLocalDate() : null)
+                    .birthday(resultSet.getDate("birthday") != null ?
+                            resultSet.getDate("birthday").toLocalDate() : null)
                     .build();
         }
     }

@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -51,30 +52,30 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
-//    @PutMapping("/{id}/friends/{friendId}")
-//    public ResponseEntity<Map<String, String>> addFriend(@PathVariable("id") Long id,
-//                                                         @PathVariable("friendId") Long friendId) {
-//        userService.addFriend(id, friendId);
-//        return ResponseEntity.ok(Map.of("message", "Friend successfully added"));
-//    }
-//
-//    @DeleteMapping("/{id}/friends/{friendId}")
-//    public ResponseEntity<Map<String, String>> removeFriend(@PathVariable("id") Long id,
-//                                                            @PathVariable("friendId") Long friendId) {
-//        userService.removeFriend(id, friendId);
-//        return ResponseEntity.ok(Map.of("message", "Friend successfully removed"));
-//    }
-//
-//    @GetMapping("/{id}/friends")
-//    public ResponseEntity<Collection<User>> getFriends(@PathVariable("id") Long id) {
-//        Collection<User> friends = userService.getFriends(id);
-//        return ResponseEntity.ok(friends);
-//    }
-//
-//    @GetMapping("/{id}/friends/common/{otherId}")
-//    public ResponseEntity<Collection<User>> getCommonFriends(@PathVariable("id") Long id,
-//                                                             @PathVariable("otherId") Long otherId) {
-//        Collection<User> commonFriends = userService.getCommonFriends(id, otherId);
-//        return ResponseEntity.ok(commonFriends);
-//    }
+    @PutMapping("/{id}/friends/{friendId}")
+    public ResponseEntity<Map<String, String>> addFriend(@PathVariable("id") Long id,
+                                                         @PathVariable("friendId") Long friendId) {
+        userService.addFriend(id, friendId);
+        return ResponseEntity.ok(Map.of("сообщение", "Друг успешно добавлен"));
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public ResponseEntity<Map<String, String>> removeFriend(@PathVariable("id") Long id,
+                                                            @PathVariable("friendId") Long friendId) {
+        userService.removeFriend(id, friendId);
+        return ResponseEntity.ok(Map.of("сообщение", "Друг успешно удален"));
+    }
+
+    @GetMapping("/{id}/friends")
+    public ResponseEntity<Collection<User>> getFriends(@PathVariable("id") Long id) {
+        List<User> friends = userService.getFriends(id);
+        return ResponseEntity.ok(friends);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public ResponseEntity<Collection<User>> getCommonFriends(@PathVariable("id") Long id,
+                                                             @PathVariable("otherId") Long otherId) {
+        List<User> commonFriends = userService.getCommonFriends(id, otherId);
+        return ResponseEntity.ok(commonFriends);
+    }
 }

@@ -1,10 +1,11 @@
-package ru.yandex.practicum.filmorate.dao_storage.film;
+package ru.yandex.practicum.filmorate.dao.film;
 
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,7 +24,10 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Optional<Film> getFilmById(Long id) {
-        String query = "SELECT * FROM film WHERE film_id = ?";
+        String query = "SELECT film.*, mpa.id\n" +
+                "FROM film\n" +
+                "JOIN mpa ON film.mpa_id = mpa.id\n" +
+                "WHERE film.film_id = 1;";
         try {
             Film film = jdbc.queryForObject(query, new Object[]{id}, new FilmRowMapper());
             return Optional.ofNullable(film);
@@ -34,23 +38,24 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void saveFilm(Film film) {
-        String query = "INSERT INTO film(name, description, release_date, duration, rating) VALUES (?, ?, ?, ?, ?)";
+        String query = "INSERT INTO film(name, description, release_date, duration, mpa_id) VALUES (?, ?, ?, ?, ?)";
         jdbc.update(query, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(),
-                film.getRating());
+                film.getMpa() != null ? film.getMpa().getId() : null);
     }
 
     @Override
     public void updateFilm(Film film) {
-        String query = "UPDATE film SET name = ?, description = ?, release_date = ?, duration = ?, rating = ?" +
+        String query = "UPDATE film SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ?" +
                 " WHERE film_id = ?";
         jdbc.update(query, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(),
-                film.getRating(), film.getId());
+                film.getMpa() != null ? film.getMpa().getId() : null, film.getId());
     }
 
     @Override
-    public void deleteFilm(Long id) {
+    public boolean deleteFilm(Long id) {
         String query = "DELETE FROM film WHERE film_id = ?";
-        jdbc.update(query, id);
+        int rowsDeleted = jdbc.update(query, id);
+        return rowsDeleted > 0;
     }
 
     @Override
@@ -81,17 +86,20 @@ public class FilmDbStorage implements FilmStorage {
                 "LIMIT ?";
         return jdbc.query(sql, new FilmRowMapper(), count);
     }
-    public class FilmRowMapper implements RowMapper<Film> {
-
+    public static class FilmRowMapper implements RowMapper<Film> {
         @Override
         public Film mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Mpa mpa = Mpa.builder()
+                    .id(rs.getInt("mpa_id"))
+                    .build();
+
             return Film.builder()
                     .id(rs.getLong("film_id"))
                     .name(rs.getString("name"))
                     .description(rs.getString("description"))
                     .releaseDate(rs.getDate("release_date").toLocalDate())
                     .duration(rs.getInt("duration"))
-                    .rating(rs.getInt("rating"))
+                    .mpa(mpa)
                     .build();
         }
     }
