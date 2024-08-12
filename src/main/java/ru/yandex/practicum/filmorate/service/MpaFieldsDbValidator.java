@@ -21,6 +21,7 @@ public class MpaFieldsDbValidator extends BaseRepository<Mpa> {
     public MpaFieldsDbValidator(JdbcTemplate jdbc, RowMapper<Mpa> mapper) {
         super(jdbc, mapper);
     }
+
     public void checkMpaId(int id) {
         log.info("Проверка id MPA; {}", id);
         if (findOne(FIND_BY_ID, id).isEmpty())
