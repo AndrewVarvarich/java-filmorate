@@ -133,7 +133,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     }
 
     public void addLike(Long filmId, Long userId) {
-        insert(QUERY_INSERT_LIKE , filmId, userId);
+        insert(QUERY_INSERT_LIKE, filmId, userId);
     }
 
     public void deleteLike(Long filmId, Long userId) {
