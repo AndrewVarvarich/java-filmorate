@@ -75,7 +75,7 @@ class FilmorateApplicationTests {
     }
 
     public void addTestUser() {
-        User user =User.builder()
+        User user = User.builder()
                 .email("test@mail.ru")
                 .login("login")
                 .name("testName")
