@@ -99,7 +99,7 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     }
 
     public void deleteFriend(Long userId, Long friendId) {
-        deleteByTwoIds(QUERY_DELETE_FRIENDSHIP , userId, friendId);
+        deleteByTwoIds(QUERY_DELETE_FRIENDSHIP, userId, friendId);
     }
 
     public User getUserById(Long id) {
