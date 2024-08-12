@@ -7,5 +7,5 @@ import lombok.Data;
 @Builder
 public class Mpa {
     private int id;
-    private String rating;
+    private String name;
 }
