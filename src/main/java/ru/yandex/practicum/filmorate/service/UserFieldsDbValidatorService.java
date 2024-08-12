@@ -26,21 +26,21 @@ public class UserFieldsDbValidatorService extends BaseRepository<User> {
 
     protected void checkUserFieldsOnUpdate(User updatedUser) {
         log.info("Проверка полей пользователя при его обновлении; {}", updatedUser.getLogin());
-        if (findOne(QUERY_SELECT_USER_BY_ID   , updatedUser.getId()).isEmpty()) {
+        if (findOne(QUERY_SELECT_USER_BY_ID, updatedUser.getId()).isEmpty()) {
             throw new NotFoundException("Польователь с id = " + updatedUser.getId() + " не найден");
         }
-        if (findOne(QUERY_SELECT_USER_BY_EMAIL_EXCLUDING_ID , updatedUser.getEmail(), updatedUser.getId()).isPresent()) {
+        if (findOne(QUERY_SELECT_USER_BY_EMAIL_EXCLUDING_ID, updatedUser.getEmail(), updatedUser.getId()).isPresent()) {
             throw new ValidationException("Этот имейл " + updatedUser.getEmail() + " уже используется");
         }
     }
 
     protected void checkUserFieldsOnCreate(User user) {
         log.info("Проверка полей пользователя при его создании; {}", user.getLogin());
-        findOne(QUERY_SELECT_USER_BY_EMAIL  , user.getEmail());
-        if (findOne(QUERY_SELECT_USER_BY_EMAIL  , user.getEmail()).isPresent()) {
+        findOne(QUERY_SELECT_USER_BY_EMAIL, user.getEmail());
+        if (findOne(QUERY_SELECT_USER_BY_EMAIL, user.getEmail()).isPresent()) {
             throw new ValidationException("Этот имейл " + user.getEmail() + " уже используется");
         }
-        if (findOne(QUERY_SELECT_USER_BY_LOGIN  , user.getLogin()).isPresent()) {
+        if (findOne(QUERY_SELECT_USER_BY_LOGIN, user.getLogin()).isPresent()) {
             throw new ValidationException("Пользователь с таким логином " + user.getLogin() + " уже существует.");
         }
     }
