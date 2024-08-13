@@ -84,22 +84,27 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     public Optional<User> findUserById(Long id) {
         return findOne(QUERY_SELECT_USER_BY_ID, id);
     }
+
     @Override
     public Optional<User> findUserByEmail(String email) {
         return findOne(QUERY_SELECT_USER_BY_EMAIL, email);
     }
+
     @Override
     public Optional<User> findUserByLogin(String login) {
         return findOne(QUERY_SELECT_USER_BY_LOGIN, login);
     }
+
     @Override
     public Optional<User> findUserByEmailExcludingId(String email, Long id) {
         return findOne(QUERY_SELECT_USER_BY_EMAIL_EXCLUDING_ID, email, id);
     }
+
     @Override
     public void addFriend(Long userId, Long friendId) {
         insert(QUERY_INSERT_FRIENDSHIP, userId, friendId);
     }
+
     @Override
     public List<User> getUserFriends(Long id) {
         List<User> friends = findMany(QUERY_SELECT_FRIENDS_BY_USER_ID, id);
@@ -107,18 +112,20 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
             friend.setFriends(getFriendsSet(friend.getId()));
         }
         return friends;
-
     }
+
     @Override
     public void deleteFriend(Long userId, Long friendId) {
         deleteByTwoIds(QUERY_DELETE_FRIENDSHIP, userId, friendId);
     }
+
     @Override
     public User getUserById(Long id) {
         User user = findUserById(id).orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
         user.setFriends(getFriendsSet(id));
         return user;
     }
+
     @Override
     public List<User> getCommonFriends(Long userId, Long otherId) {
         Set<Long> userFriendsSet = getUserById(userId).getFriends();
