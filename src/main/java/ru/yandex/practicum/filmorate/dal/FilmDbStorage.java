@@ -128,7 +128,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
         return filmToRemove;
     }
-
+    @Override
     public Film getFilmById(Long id) {
         Film film = findFilmById(id).orElseThrow(() -> new NotFoundException("Фильм с id " + id + " не найден"));
         film.setLikes(new HashSet<>(findManyInstances(QUERY_SELECT_LIKES_BY_FILM_ID, Long.class, id)));
@@ -136,22 +136,22 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(id)));
         return film;
     }
-
+    @Override
     public void addLike(Long filmId, Long userId) {
         insert(QUERY_INSERT_LIKE, filmId, userId);
     }
-
+    @Override
     public void deleteLike(Long filmId, Long userId) {
         if (findManyInstances(QUERY_COUNT_LIKES_BY_FILM_ID_AND_USER_ID, Long.class, filmId, userId).getFirst() == 0) {
             throw new NotFoundException("У фильма с id " + filmId + " нет лайка от пользователя с id " + userId);
         }
         deleteByTwoIds(QUERY_DELETE_LIKE_BY_FILM_ID_AND_USER_ID, filmId, userId);
     }
-
+    @Override
     public Optional<Mpa> findMpaById(int id) {
         return findMpa(QUERY_SELECT_MPA_BY_ID, id);
     }
-
+    @Override
     public Optional<Genre> findGenreById(long id) {
         return findGenre(QUERY_SELECT_GENRE_BY_ID, id);
     }

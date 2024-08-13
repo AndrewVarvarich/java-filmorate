@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.FieldsValidatorService;
 
 import java.util.Collection;
@@ -40,20 +42,6 @@ public class InMemoryFilmStorage implements FilmStorage {
         FieldsValidatorService.validateFilmId(newFilm);
         FieldsValidatorService.validateReleaseDate(newFilm);
         FieldsValidatorService.validateUpdateFilmFields(newFilm, films);
-        /*if (films.containsKey(newFilm.getId())) {
-            Film oldFilm = films.get(newFilm.getId());
-            if (newFilm.getName() == null || newFilm.getDescription() == null || newFilm.getDuration() == 0 ||
-                    newFilm.getReleaseDate() == null) {
-                return oldFilm;
-            }
-            Film updateFilm = Film.builder()
-                    .id(oldFilm.getId())
-                    .name(newFilm.getName())
-                    .description(newFilm.getDescription())
-                    .releaseDate(newFilm.getReleaseDate())
-                    .duration(newFilm.getDuration())
-                    .likes(newFilm.getLikes())
-                    .build();*/
         films.put(newFilm.getId(), newFilm);
         log.info("Объект успешно обновлен\n");
         return newFilm;
@@ -67,6 +55,31 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Collection<Film> getAllFilms() {
         return films.values();
+    }
+
+    @Override
+    public Film getFilmById(Long id) {
+        return null;
+    }
+
+    @Override
+    public void addLike(Long filmId, Long userId) {
+
+    }
+
+    @Override
+    public void deleteLike(Long filmId, Long userId) {
+
+    }
+
+    @Override
+    public Optional<Mpa> findMpaById(int id) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<Genre> findGenreById(long id) {
+        return Optional.empty();
     }
 
     private long getNextFilmId() {

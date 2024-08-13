@@ -54,6 +54,46 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
+    public Optional<User> findUserByEmail(String email) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<User> findUserByLogin(String login) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<User> findUserByEmailExcludingId(String email, Long id) {
+        return Optional.empty();
+    }
+
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+
+    }
+
+    @Override
+    public List<User> getUserFriends(Long id) {
+        return null;
+    }
+
+    @Override
+    public void deleteFriend(Long userId, Long friendId) {
+
+    }
+
+    @Override
+    public User getUserById(Long id) {
+        return null;
+    }
+
+    @Override
+    public List<User> getCommonFriends(Long userId, Long otherId) {
+        return null;
+    }
+
+    @Override
     public Optional<User> findUserById(Long id) {
         return Optional.ofNullable(users.get(id));
     }

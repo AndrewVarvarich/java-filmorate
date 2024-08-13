@@ -14,4 +14,20 @@ public interface UserStorage {
     Optional<User> findUserById(Long id);
 
     List<User> getAllUsers();
+
+    Optional<User> findUserByEmail(String email);
+
+    Optional<User> findUserByLogin(String login);
+
+    Optional<User> findUserByEmailExcludingId(String email, Long id);
+
+    void addFriend(Long userId, Long friendId);
+
+    List<User> getUserFriends(Long id);
+
+    void deleteFriend(Long userId, Long friendId);
+
+    User getUserById(Long id);
+
+    List<User> getCommonFriends(Long userId, Long otherId);
 }
