@@ -34,8 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ContextConfiguration(classes = {UserDbService.class, UserDbStorage.class, FilmDbStorage.class, UserRowMapper.class,
         GenreDbService.class, GenreDbStorage.class, MpaDbStorage.class, MpaDbService.class,
         FilmDbService.class, FilmRowMapper.class, GenreDbService.class, GenreRowMapper.class,
-        MpaFieldsDbValidator.class, MpaRowMapper.class, FieldsValidatorService.class,
-        FilmFieldsDbValidatorService.class, UserFieldsDbValidatorService.class})
+        MpaRowMapper.class, FieldsValidatorService.class})
 class FilmorateApplicationTests {
 
     private final UserDbService userDbService;

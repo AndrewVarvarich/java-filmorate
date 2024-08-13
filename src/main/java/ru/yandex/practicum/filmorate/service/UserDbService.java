@@ -2,9 +2,11 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.UserDbStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.List;
@@ -15,8 +17,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class UserDbService {
-
-    private final UserFieldsDbValidatorService userDbValidator;
+    @Qualifier("userDbStorage")
     private final UserDbStorage userDbStorage;
 
     public List<User> getAll() {
@@ -24,14 +25,13 @@ public class UserDbService {
     }
 
     public User createUser(User user) {
-        userDbValidator.checkUserFieldsOnCreate(user);
+        validateUserOnCreate(user);
         return userDbStorage.addUser(user);
     }
 
     public User update(User updatedUser) {
         log.info("Проверка наличия id пользователя в запросе: {}.", updatedUser.getLogin());
-        FieldsValidatorService.validateUserId(updatedUser);
-        userDbValidator.checkUserFieldsOnUpdate(updatedUser);
+        validateUserOnUpdate(updatedUser);
         log.info("Пользователя с именем: {} обновлены.", updatedUser.getName());
 
         return userDbStorage.updateUser(updatedUser);
@@ -70,5 +70,29 @@ public class UserDbService {
 
     public List<User> getCommonFriends(Long userId, Long otherId) {
         return userDbStorage.getCommonFriends(userId, otherId);
+    }
+
+    private void validateUserOnCreate(User user) {
+        log.info("Проверка полей пользователя при его создании; {}", user.getLogin());
+
+        if (userDbStorage.findUserByEmail(user.getEmail()).isPresent()) {
+            throw new ValidationException("Этот имейл " + user.getEmail() + " уже используется");
+        }
+
+        if (userDbStorage.findUserByLogin(user.getLogin()).isPresent()) {
+            throw new ValidationException("Пользователь с таким логином " + user.getLogin() + " уже существует.");
+        }
+    }
+
+    private void validateUserOnUpdate(User user) {
+        log.info("Проверка полей пользователя при его обновлении; {}", user.getLogin());
+
+        if (userDbStorage.findUserById(user.getId()).isEmpty()) {
+            throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден");
+        }
+
+        if (userDbStorage.findUserByEmailExcludingId(user.getEmail(), user.getId()).isPresent()) {
+            throw new ValidationException("Этот имейл " + user.getEmail() + " уже используется");
+        }
     }
 }

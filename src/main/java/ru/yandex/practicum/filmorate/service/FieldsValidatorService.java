@@ -31,7 +31,7 @@ public class FieldsValidatorService {
             throw new NotFoundException("Фильм с id = " + updatedFilm.getId() + " не найден");
         }
 
-        if (!updatedFilm.equals(films.get(updatedFilm.getId()))) { //@EqualsAndHashCode(of = {"name", "releaseDate"})
+        if (!updatedFilm.equals(films.get(updatedFilm.getId()))) {
             for (Long id : films.keySet()) {
                 Film middleFilm = films.get(id);
                 if (updatedFilm.equals(middleFilm)) {

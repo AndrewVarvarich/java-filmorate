@@ -7,6 +7,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -84,5 +86,13 @@ public class BaseRepository<T> {
         if (rowsUpdated == 0) {
             throw new InternalServerException("Не удалось обновить данные");
         }
+    }
+
+    protected Optional<Mpa> findMpa(String query, Object... args) {
+        return Optional.empty();
+    }
+
+    protected Optional<Genre> findGenre(String query, Object... args) {
+        return Optional.empty();
     }
 }

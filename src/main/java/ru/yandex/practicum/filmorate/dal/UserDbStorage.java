@@ -1,8 +1,9 @@
 package ru.yandex.practicum.filmorate.dal;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -16,7 +17,8 @@ import java.util.stream.Collectors;
 
 
 @Repository
-@Qualifier("UserDbStorage")
+@Component("dbUserStorage")
+@Primary
 public class UserDbStorage extends BaseRepository<User> implements UserStorage {
 
     private static final String QUERY_UPDATE_USER = "UPDATE USERS SET USER_NAME = ?, EMAIL = ?, LOGIN = ?, " +
@@ -32,8 +34,10 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     private static final String QUERY_SELECT_USER_BY_ID = "SELECT * FROM USERS WHERE USER_ID = ?";
     private static final String QUERY_INSERT_USER = "INSERT INTO USERS(USER_NAME, EMAIL, LOGIN, BIRTHDAY)" +
             "VALUES (?,?,?,?)";
-    private static final String QUERY_DELETE_USER_FRIENDSHIPS = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? OR FRIEND_ID = ?";
-    private static final String QUERY_DELETE_USER = "DELETE FROM USERS WHERE USER_ID = ?";
+    private static final String QUERY_SELECT_USER_BY_EMAIL = "SELECT * FROM USERS WHERE EMAIL = ?";
+    private static final String QUERY_SELECT_USER_BY_LOGIN = "SELECT * FROM USERS WHERE LOGIN = ?";
+    private static final String QUERY_SELECT_USER_BY_EMAIL_EXCLUDING_ID = "SELECT * FROM USERS WHERE EMAIL = ? " +
+            "AND USER_ID != ?";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -81,6 +85,18 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         return findOne(QUERY_SELECT_USER_BY_ID, id);
     }
 
+    public Optional<User> findUserByEmail(String email) {
+        return findOne(QUERY_SELECT_USER_BY_EMAIL, email);
+    }
+
+    public Optional<User> findUserByLogin(String login) {
+        return findOne(QUERY_SELECT_USER_BY_LOGIN, login);
+    }
+
+    public Optional<User> findUserByEmailExcludingId(String email, Long id) {
+        return findOne(QUERY_SELECT_USER_BY_EMAIL_EXCLUDING_ID, email, id);
+    }
+
     public void addFriend(Long userId, Long friendId) {
         insert(QUERY_INSERT_FRIENDSHIP, userId, friendId);
     }
@@ -92,10 +108,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         }
         return friends;
 
-    }
-
-    private Set<Long> getFriendsSet(Long id) {
-        return new HashSet<>(findManyInstances(QUERY_SELECT_FRIEND_IDS_BY_USER_ID, Long.class, id));
     }
 
     public void deleteFriend(Long userId, Long friendId) {
@@ -117,5 +129,9 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         return userFriendsSet.stream()
                 .map(this::getUserById)
                 .collect(Collectors.toList());
+    }
+
+    private Set<Long> getFriendsSet(Long id) {
+        return new HashSet<>(findManyInstances(QUERY_SELECT_FRIEND_IDS_BY_USER_ID, Long.class, id));
     }
 }

@@ -1,19 +1,19 @@
 package ru.yandex.practicum.filmorate.dal;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.GenreRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.MpaRowMapper;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.service.FilmFieldsDbValidatorService;
 import ru.yandex.practicum.filmorate.service.GenreDbService;
-import ru.yandex.practicum.filmorate.service.GenreFieldsDbValidator;
 import ru.yandex.practicum.filmorate.service.MpaDbService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
@@ -21,7 +21,8 @@ import java.util.*;
 
 @Slf4j
 @Repository
-@Qualifier("FilmDbStorage")
+@Component("dbFilmStorage")
+@Primary
 public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
     private static final String QUERY_SELECT_ALL_FILMS = "SELECT * FROM FILMS";
@@ -39,18 +40,18 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String QUERY_SELECT_FILM_BY_ID = "SELECT * FROM FILMS WHERE FILM_ID = ?";
     private static final String QUERY_INSERT_FILM = "INSERT INTO FILMS(FILM_NAME, RELEASE_DATE, DURATION, " +
             "DESCRIPTION, MPA_ID) VALUES (?,?,?,?,?)";
-
+    private static final String QUERY_SELECT_MPA_BY_ID = "SELECT * FROM MPA WHERE MPA_ID = ?";
+    private static final String QUERY_SELECT_GENRE_BY_ID = "SELECT * FROM GENRES WHERE GENRE_ID = ?";
+    private static final String QUERY_SELECT_FILM_BY_NAME_AND_RELEASE_DATE =
+            "SELECT * FROM FILMS WHERE FILM_NAME = ? AND RELEASE_DATE = ?";
     private final RowMapper<Mpa> mpaMapper = new MpaRowMapper();
     private final RowMapper<Genre> genreMapper = new GenreRowMapper();
     private final MpaDbService mpaDbService = new MpaDbService(new MpaDbStorage(jdbc, mpaMapper));
-    private final GenreFieldsDbValidator genreDbValidator = new GenreFieldsDbValidator(jdbc, genreMapper);
     private final GenreDbService genreDbService = new GenreDbService(new GenreDbStorage(jdbc, genreMapper));
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
     }
-
-    private final FilmFieldsDbValidatorService filmDbValidator = new FilmFieldsDbValidatorService(jdbc, mapper);
 
     @Override
     public Collection<Film> getAllFilms() {
@@ -67,44 +68,48 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
     @Override
     public Film addFilm(Film film) {
+
         long id = insertWithGenId(QUERY_INSERT_FILM, film.getName(), film.getReleaseDate(), film.getDuration(),
                 film.getDescription(), film.getMpa().getId());
+
         Set<Genre> genres = film.getGenres();
         if (genres != null) {
             for (Genre genre : genres) {
-                genreDbValidator.checkGenreId(genre.getId());
-            }
-            for (Genre genre : genres) {
+                validateGenre(genre.getId());
                 genre.setName(genreDbService.findGenreNameById(genre.getId()));
                 insert(QUERY_INSERT_FILM_GENRE, id, genre.getId());
             }
         }
+
         film.setId(id);
         film.setLikes(new HashSet<>(findManyInstances(QUERY_SELECT_LIKES_BY_FILM_ID, Long.class, id)));
-        film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
+        film.getMpa().setName(Optional.ofNullable(mpaDbService.findMpaNameById(film.getMpa().getId()))
+                .orElseThrow(() -> new NotFoundException("MPA не найден")));
 
         return film;
     }
 
     @Override
     public Film updateFilm(Film updatedFilm) {
+        if (findOne(QUERY_SELECT_FILM_BY_ID, updatedFilm.getId()).isEmpty()) {
+            throw new NotFoundException("Фильм с id = " + updatedFilm.getId() + " не найден");
+        }
+
         Set<Genre> genres = updatedFilm.getGenres();
         if (genres != null) {
-            for (Genre genre : genres) {
-                genreDbValidator.checkGenreId(genre.getId());
-            }
             delete(QUERY_DELETE_GENRES_BY_FILM_ID, updatedFilm.getId());
             for (Genre genre : genres) {
+                validateGenre(genre.getId());
                 genre.setName(genreDbService.findGenreNameById(genre.getId()));
                 insert(QUERY_INSERT_FILM_GENRE, updatedFilm.getId(), genre.getId());
             }
         }
-        filmDbValidator.validateUpdateFilmFields(updatedFilm);
 
         update(
                 QUERY_UPDATE_FILM, updatedFilm.getName(), updatedFilm.getDescription(), updatedFilm.getReleaseDate(),
                 updatedFilm.getDuration(), updatedFilm.getMpa().getId(), updatedFilm.getId()
         );
+
         log.info("Данные фильма с названием: {} обновлены.", updatedFilm.getName());
         return getFilmById(updatedFilm.getId());
     }
@@ -141,5 +146,39 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             throw new NotFoundException("У фильма с id " + filmId + " нет лайка от пользователя с id " + userId);
         }
         deleteByTwoIds(QUERY_DELETE_LIKE_BY_FILM_ID_AND_USER_ID, filmId, userId);
+    }
+
+    public Optional<Mpa> findMpaById(int id) {
+        return findMpa(QUERY_SELECT_MPA_BY_ID, id);
+    }
+
+    public Optional<Genre> findGenreById(long id) {
+        return findGenre(QUERY_SELECT_GENRE_BY_ID, id);
+    }
+
+    public String findGenreNameById(int id) {
+        return findGenreById(id).map(Genre::getName).orElse("");
+    }
+
+    public Optional<String> findMpaNameById(int id) {
+        return findMpaById(id).map(Mpa::getName);
+    }
+
+    private void validateGenre(long genreId) {
+        if (findGenreById(genreId).isEmpty()) {
+            throw new ValidationException("Жанр с id " + genreId + " не существует");
+        }
+    }
+
+    @Override
+    protected Optional<Mpa> findMpa(String query, Object... args) {
+        return jdbc.query(query, args, mpaMapper)
+                .stream().findFirst();
+    }
+
+    @Override
+    protected Optional<Genre> findGenre(String query, Object... args) {
+        return jdbc.query(query, args, genreMapper)
+                .stream().findFirst();
     }
 }
