@@ -39,7 +39,6 @@ public class FilmController {
 
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film newFilm) {
-        System.out.println("HUUUUUUUUUUUUUUY_+++++++++++++++++++++++++++++++");
         return filmDbService.update(newFilm);
     }
 
