@@ -17,7 +17,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class UserDbService {
-    @Qualifier("userDbStorage")
+    @Qualifier("dbUserStorage")
     private final UserDbStorage userDbStorage;
 
     public List<User> getAll() {

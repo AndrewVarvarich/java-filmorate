@@ -21,7 +21,6 @@ public class FilmDbService {
 
     @Qualifier("dbFilmStorage")
     private final FilmDbStorage filmDbStorage;
-    @Qualifier("dbUserStorage")
     private final UserDbService userDbService;
 
     public Collection<Film> getAll() {
