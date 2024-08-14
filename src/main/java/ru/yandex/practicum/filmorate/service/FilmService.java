@@ -33,6 +33,9 @@ public class FilmService {
     }
 
     public Film updateFilm(Film film) {
+        Film existingFilm = filmStorage.findFilmById(film.getId())
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + film.getId() + " не найден"));
+
         return filmStorage.updateFilm(film);
     }
 
