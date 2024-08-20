@@ -1,31 +1,27 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.FilmValidationService;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.service.FieldsValidatorService;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
-@Component
+@Component("InMemoryFilmStorage")
 @Slf4j
 public class InMemoryFilmStorage implements FilmStorage {
 
     private Map<Long, Film> films = new HashMap<>();
 
-    private final FilmValidationService filmValidationService;
-
-    @Autowired
-    public InMemoryFilmStorage(FilmValidationService filmValidationService) {
-        this.filmValidationService = filmValidationService;
-    }
-
     @Override
     public Film addFilm(Film film) {
-        filmValidationService.validateFilm(film);
+        FieldsValidatorService.validateReleaseDate(film);
         film.setId(getNextFilmId());
         films.put(film.getId(), film);
         log.info("Объект успешно добавлен: {}\n", film);
@@ -43,40 +39,47 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film updateFilm(Film newFilm) {
-        filmValidationService.validateFilm(newFilm);
-        if (newFilm.getId() == null) {
-            log.error("Ошибка в id\n");
-            throw new ValidationException("Id должен быть указан");
-        }
-        if (films.containsKey(newFilm.getId())) {
-            Film oldFilm = films.get(newFilm.getId());
-            if (newFilm.getName() == null || newFilm.getDescription() == null || newFilm.getDuration() == 0 ||
-                    newFilm.getReleaseDate() == null) {
-                return oldFilm;
-            }
-            Film updateFilm = Film.builder()
-                    .id(oldFilm.getId())
-                    .name(newFilm.getName())
-                    .description(newFilm.getDescription())
-                    .releaseDate(newFilm.getReleaseDate())
-                    .duration(newFilm.getDuration())
-                    .likes(newFilm.getLikes())
-                    .build();
-            films.put(updateFilm.getId(), updateFilm);
-            log.info("Объект успешно обновлен\n");
-            return updateFilm;
-        }
-        throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
+        FieldsValidatorService.validateFilmId(newFilm);
+        FieldsValidatorService.validateReleaseDate(newFilm);
+        FieldsValidatorService.validateUpdateFilmFields(newFilm, films);
+        films.put(newFilm.getId(), newFilm);
+        log.info("Объект успешно обновлен\n");
+        return newFilm;
     }
 
     @Override
-    public Optional<Film> findFilmById(long id) {
+    public Optional<Film> findFilmById(Long id) {
         return Optional.ofNullable(films.get(id));
     }
 
     @Override
     public Collection<Film> getAllFilms() {
         return films.values();
+    }
+
+    @Override
+    public Film getFilmById(Long id) {
+        return null;
+    }
+
+    @Override
+    public void addLike(Long filmId, Long userId) {
+
+    }
+
+    @Override
+    public void deleteLike(Long filmId, Long userId) {
+
+    }
+
+    @Override
+    public Optional<Mpa> findMpaById(int id) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<Genre> findGenreById(long id) {
+        return Optional.empty();
     }
 
     private long getNextFilmId() {

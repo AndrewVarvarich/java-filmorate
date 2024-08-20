@@ -6,12 +6,9 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
-@Component
+@Component("InMemoryUserStorage")
 @Slf4j
 public class InMemoryUserStorage implements UserStorage {
 
@@ -24,15 +21,6 @@ public class InMemoryUserStorage implements UserStorage {
         users.put(user.getId(), user);
         log.info("Объект успешно добавлен\n", user);
         return user;
-    }
-
-    @Override
-    public User removeUser(User user) {
-        if (!users.containsValue(user)) {
-            throw new NotFoundException("Такого юзера нет");
-        }
-
-        return users.remove(user.getId());
     }
 
     @Override
@@ -50,7 +38,7 @@ public class InMemoryUserStorage implements UserStorage {
                     .login(newUser.getLogin())
                     .name(newUser.getName())
                     .birthday(newUser.getBirthday())
-                    .friendsId(newUser.getFriendsId())
+                    .friends(newUser.getFriends())
                     .build();
             users.put(updateUser.getId(), updateUser);
             log.info("Объект успешно обновлен\n", updateUser);
@@ -61,12 +49,52 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public Collection<User> getAllUsers() {
-        return users.values();
+    public List<User> getAllUsers() {
+        return new ArrayList<>(users.values());
     }
 
     @Override
-    public Optional<User> findUserById(long id) {
+    public Optional<User> findUserByEmail(String email) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<User> findUserByLogin(String login) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<User> findUserByEmailExcludingId(String email, Long id) {
+        return Optional.empty();
+    }
+
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+
+    }
+
+    @Override
+    public List<User> getUserFriends(Long id) {
+        return null;
+    }
+
+    @Override
+    public void deleteFriend(Long userId, Long friendId) {
+
+    }
+
+    @Override
+    public User getUserById(Long id) {
+        return null;
+    }
+
+    @Override
+    public List<User> getCommonFriends(Long userId, Long otherId) {
+        return null;
+    }
+
+    @Override
+    public Optional<User> findUserById(Long id) {
         return Optional.ofNullable(users.get(id));
     }
 
